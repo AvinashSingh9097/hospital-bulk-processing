@@ -124,7 +124,7 @@ class TestBulkCreate:
             files=_csv_upload(make_valid_csv(2)),
         )
         body = resp.json()
-        assert "batch_id" in body
+        assert "id" in body
         assert "total_hospitals" in body
         assert "processed_hospitals" in body
         assert "failed_hospitals" in body
@@ -278,10 +278,10 @@ class TestGetBatch:
             "/api/v1/hospitals/bulk",
             files=_csv_upload(make_valid_csv(2)),
         )
-        batch_id = create_resp.json()["batch_id"]
+        batch_id = create_resp.json()["id"]
         resp = await api_client.get(f"/api/v1/hospitals/bulk/{batch_id}")
         assert resp.status_code == 200
-        assert resp.json()["batch_id"] == batch_id
+        assert resp.json()["id"] == batch_id
 
     async def test_returns_404_for_unknown_batch(self, api_client):
         resp = await api_client.get("/api/v1/hospitals/bulk/nonexistent-id")
@@ -296,7 +296,7 @@ class TestGetBatchProgress:
             "/api/v1/hospitals/bulk",
             files=_csv_upload(make_valid_csv(2)),
         )
-        batch_id = create_resp.json()["batch_id"]
+        batch_id = create_resp.json()["id"]
         resp = await api_client.get(f"/api/v1/hospitals/bulk/{batch_id}/progress")
         assert resp.status_code == 200
         assert resp.json()["progress_percent"] == 100.0
@@ -314,7 +314,7 @@ class TestDeleteBatch:
             "/api/v1/hospitals/bulk",
             files=_csv_upload(make_valid_csv(1)),
         )
-        batch_id = create_resp.json()["batch_id"]
+        batch_id = create_resp.json()["id"]
         resp = await api_client.delete(f"/api/v1/hospitals/bulk/{batch_id}")
         assert resp.status_code == 204
 
@@ -323,7 +323,7 @@ class TestDeleteBatch:
             "/api/v1/hospitals/bulk",
             files=_csv_upload(make_valid_csv(1)),
         )
-        batch_id = create_resp.json()["batch_id"]
+        batch_id = create_resp.json()["id"]
         await api_client.delete(f"/api/v1/hospitals/bulk/{batch_id}")
         resp = await api_client.get(f"/api/v1/hospitals/bulk/{batch_id}")
         assert resp.status_code == 404
