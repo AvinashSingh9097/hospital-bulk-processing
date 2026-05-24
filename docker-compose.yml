@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./hospital_bulk.db
+      - HOSPITAL_API_BASE_URL=https://hospital-directory.onrender.com
+      - HOSPITAL_API_TIMEOUT=30.0
+      - MAX_CSV_ROWS=20
+      - HTTP_CONCURRENCY_LIMIT=5
+      - DEBUG=false
+    volumes:
+      - ./data:/app/data   # persist SQLite across restarts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
