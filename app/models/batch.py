@@ -41,7 +41,8 @@ class Batch(Base):
     )
 
     hospitals: Mapped[list["HospitalRow"]] = relationship(
-        back_populates="batch", cascade="all, delete-orphan"
+        back_populates="batch", cascade="all, delete-orphan",
+        passive_deletes=True
     )
 
 
