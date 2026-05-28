@@ -3,7 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
 
 from app.api.deps import BulkServiceDep, SettingsDep
-from app.core.exceptions import BatchNotFoundError, CSVTooLargeError, CSVValidationError
 from app.schemas.batch import (
     BatchListResponse,
     BatchProgress,
@@ -40,13 +39,7 @@ async def bulk_create_hospitals(
             detail="File must be a .csv file.",
         )
 
-    try:
-        rows = parse_csv(file.file, settings)
-    except CSVValidationError as exc:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc))
-    except CSVTooLargeError as exc:
-        raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail=str(exc))
-
+    rows = parse_csv(file.file, settings)
     return await service.process_bulk(rows)
 
 
@@ -83,10 +76,7 @@ async def list_batches(
     summary="Get full details of a batch",
 )
 async def get_batch(batch_id: str, service: BulkServiceDep) -> BatchResponse:
-    try:
-        return await service.get_batch(batch_id)
-    except BatchNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return await service.get_batch(batch_id)
 
 
 @router.get(
@@ -95,10 +85,7 @@ async def get_batch(batch_id: str, service: BulkServiceDep) -> BatchResponse:
     summary="Poll real-time progress of a running batch",
 )
 async def get_batch_progress(batch_id: str, service: BulkServiceDep) -> BatchProgress:
-    try:
-        return await service.get_batch_progress(batch_id)
-    except BatchNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    return await service.get_batch_progress(batch_id)
 
 
 @router.delete(
@@ -107,7 +94,4 @@ async def get_batch_progress(batch_id: str, service: BulkServiceDep) -> BatchPro
     summary="Delete a batch and all its hospitals from the directory",
 )
 async def delete_batch(batch_id: str, service: BulkServiceDep) -> None:
-    try:
-        await service.delete_batch(batch_id)
-    except BatchNotFoundError as exc:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc))
+    await service.delete_batch(batch_id)

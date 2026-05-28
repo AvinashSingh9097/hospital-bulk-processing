@@ -20,31 +20,30 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
     await close_http_client()
 
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.app_version,
+        description=(
+            "Bulk hospital processing service. "
+            "Upload a CSV to create and activate hospitals via the Hospital Directory API."
+        ),
+        lifespan=lifespan,
+        docs_url="/docs",
+        redoc_url="/redoc",
+    )
 
-app = FastAPI(
-    title=settings.app_name,
-    version=settings.app_version,
-    description=(
-        "Bulk hospital processing service. "
-        "Upload a CSV to create and activate hospitals via the Hospital Directory API."
-    ),
-    lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
-)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    register_exception_handlers(app)
+    app.include_router(hospitals.router, prefix="/api/v1")
+    @app.get("/health", tags=["Health"])
+    async def health() -> dict:
+        return {"status": "ok", "version": settings.app_version}
+    return app
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-register_exception_handlers(app)
-
-app.include_router(hospitals.router, prefix="/api/v1")
-
-
-@app.get("/health", tags=["Health"])
-async def health() -> dict:
-    return {"status": "ok", "version": settings.app_version}
+app = create_app()
